@@ -113,24 +113,20 @@ namespace RFM12B
             status = SpiReadStatus();
         }
 
-        public IAsyncOperation<int> HardReset()
-        {
-            return this.HardResetHelper().AsAsyncOperation();
-        }
+        //public IAsyncOperation<int> HardReset()
+        //{
+        //    return this.HardResetHelper().AsAsyncOperation();
+        //}
 
-        private async Task<int> HardResetHelper()
-        {
-            byte[] status = SpiReadStatus();
+        //private async Task<int> HardResetHelper()
+        //{
+        //    pinReset.Write(GpioPinValue.Low);
+        //    await Task.Delay(300);
+        //    pinReset.Write(GpioPinValue.High);
+        //    await Task.Delay(300);
 
-            pinReset.Write(GpioPinValue.Low);
-            await Task.Delay(300);
-            pinReset.Write(GpioPinValue.High);
-            await Task.Delay(300);
-
-            status = SpiReadStatus();
-
-            return 0;
-        }
+        //    return 0;
+        //}
 
         private async Task InitSPI()
         {
