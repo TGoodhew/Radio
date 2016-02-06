@@ -41,10 +41,12 @@ namespace RFM12B
         private readonly byte[] Clock_10Mhz = { 0xC0, 0xE0 };
 
         // Test command definitions - From http://tools.jeelabs.org/rfm12b.html
-        private readonly byte[] Config = { 0x80, 0x37 };        // 915MHz, 12pF [el=0]
+        private readonly byte[] Config = { 0x80, 0x37 };        // 915MHz, 12pF [el=0, ef=0]
         private readonly byte[] EL_Config = { 0x80, 0xB7 };     // 915MHz, 12pF, TX on [el=1]
+        private readonly byte[] EF_Config = { 0x80, 0x77 };     // 915MHz, 12pF, RX FIFO on [ef=1]
         private readonly byte[] Power = { 0x82, 0x58 };         // Base Band Block, Tx off [et=0], Syn On, Osc on 
         private readonly byte[] ET_Power = { 0x82, 0x78 };      // Base Band Block, Tx on [et=1], Syn On, Osc on 
+        private readonly byte[] ER_Power = { 0x82, 0xD8 };      // Base Band Block, RX on [er=1], Syn On, Osc on 
         private readonly byte[] Frequency = { 0xA6, 0x40 };     // 912MHz Center
         private readonly byte[] DataRate = { 0xC6, 0x11 };      // 19.157kbps - SPI speed dependent - RGUR thrown
         private readonly byte[] RecControl = { 0x94, 0xA2 };    // LNA Max, RX BW 134 KHz, DRSSI -91bB, VDI, VDI Fast
@@ -92,25 +94,119 @@ namespace RFM12B
 
         private void InitRadio()
         {
-            byte[] status = SpiReadStatus();
+            //byte[] status = SpiReadStatus();
 
+            // Avoid power-on issue
+            byte[] cmd = { 0x00, 0x00 };
+
+            SpiSendCmd(cmd);
+
+            // Sleep mode, Disable Clk, enable LBD
+            cmd[0] = 0x82;
+            cmd[1] = 0x05;
+
+            SpiSendCmd(cmd);
+
+            // In case the devices is in OOK mode
+            cmd[0] = 0xB8;
+            cmd[1] = 0x00;
+
+            SpiSendCmd(cmd);
+
+            // EL, EF, 12pF
+            cmd[0] = 0x80;
+            cmd[1] = 0xF7;
+
+            SpiSendCmd(cmd);
+
+            // 912Mhz center frequency (according to command sheet, according to lib it should be 915)
+            cmd[0] = 0xA6;
+            cmd[1] = 0x40;
+
+            SpiSendCmd(cmd);
+
+            // Data rate 38.314Kbps
+            cmd[0] = 0xC6;
+            cmd[1] = 0x08;
+
+            SpiSendCmd(cmd);
+
+            // VDI, FAST, 134Khz, 0dBm, -91dBm
+            cmd[0] = 0x94;
+            cmd[1] = 0xA2;
+
+            SpiSendCmd(cmd);
+
+            // AL, !ml, DIG, DQD4
+            cmd[0] = 0xC2;
+            cmd[1] = 0xAC;
+
+            SpiSendCmd(cmd);
+
+            //FIFO8, 2 Sync, !ff, DR
+            cmd[0] = 0xB8;
+            cmd[1] = 0x00;
+
+            SpiSendCmd(cmd);
+
+            // SYNC 2DD4
+            cmd[0] = 0xCE;
+            cmd[1] = 0xD4;
+
+            SpiSendCmd(cmd);
+
+            // @PWR, No Restrict, !st, !fi, OE, EN
+            cmd[0] = 0xC4;
+            cmd[1] = 0x83;
+
+            SpiSendCmd(cmd);
+
+            // !mp, 90Khz, Max Out
+            cmd[0] = 0x98;
+            cmd[1] = 0x50;
+
+            SpiSendCmd(cmd);
+
+            // OB1, OB0, LPX, !dly, DDIT, BW0
+            cmd[0] = 0xCC;
+            cmd[1] = 0x77;
+
+            SpiSendCmd(cmd);
+
+            // Zero wakeup timer
+            cmd[0] = 0xE0;
+            cmd[1] = 0x00;
+
+            SpiSendCmd(cmd);
+
+            // Zero low duty cycle
+            cmd[0] = 0xC8;
+            cmd[1] = 0x00;
+
+            SpiSendCmd(cmd);
+
+            // 1.66MHz, 2.55V
+            cmd[0] = 0xC0;
+            cmd[1] = 0x43;
+
+            SpiSendCmd(cmd);
             // Config for demo settings
-            SpiSendCmd(Config);
-            SpiSendCmd(Power);
-            SpiSendCmd(Frequency);
-            SpiSendCmd(DataRate);
-            SpiSendCmd(RecControl);
-            SpiSendCmd(DataFilter);
-            SpiSendCmd(FIFO);
-            SpiSendCmd(SyncPattern);
-            SpiSendCmd(AFC);
-            SpiSendCmd(TxControl);
-            SpiSendCmd(PLL);
-            SpiSendCmd(WakeUp);
-            SpiSendCmd(LowDutyCycle);
-            SpiSendCmd(BattClock);
+            //SpiSendCmd(Config);
+            //SpiSendCmd(Power);
+            //SpiSendCmd(Frequency);
+            //SpiSendCmd(DataRate);
+            //SpiSendCmd(RecControl);
+            //SpiSendCmd(DataFilter);
+            //SpiSendCmd(FIFO);
+            //SpiSendCmd(SyncPattern);
+            //SpiSendCmd(AFC);
+            //SpiSendCmd(TxControl);
+            //SpiSendCmd(PLL);
+            //SpiSendCmd(WakeUp);
+            //SpiSendCmd(LowDutyCycle);
+            //SpiSendCmd(BattClock);
 
-            status = SpiReadStatus();
+            //status = SpiReadStatus();
         }
 
         //public IAsyncOperation<int> HardReset()
@@ -161,7 +257,7 @@ namespace RFM12B
             pinReset = CreateWritePin(NRES_PIN);
             pinNIRQ = CreateReadPin(NIRQ_PIN);
             //pinNFFS = CreateWritePin(NFFS_PIN);
-            //pinFFIT = CreateWritePin(FFIT_PIN);
+            pinFFIT = CreateWritePin(FFIT_PIN);
             //pinNINT = CreateWritePin(NINT_PIN);
         }
 
@@ -222,9 +318,13 @@ namespace RFM12B
             //var result = SpiReadStatus();
 
             // el=1
-            SpiSendCmd(EL_Config);
+            //SpiSendCmd(EL_Config);
             // et=1
-            SpiSendCmd(ET_Power);
+            //SpiSendCmd(ET_Power);
+
+            // Turn TX On
+            byte[] cmd = { 0x82, 0x3D };
+            SpiSendCmd(cmd);
 
             SpiWriteData(preamble);
 
@@ -235,9 +335,9 @@ namespace RFM12B
             SpiWriteData(dummy);
 
             // et = 0
-            SpiSendCmd(Power);
+            //SpiSendCmd(Power);
             // el = 0 
-            SpiSendCmd(Config);
+            //SpiSendCmd(Config);
         }
 
         private void SpiWriteData(byte[] data)
@@ -256,6 +356,33 @@ namespace RFM12B
                 txData[1] = txbyte;
                 SpiSendCmd(txData);
             }
+        }
+
+        public void ReadData()
+        {
+            byte[] cmd = new byte[2] { 0xB0, 0x00 };
+            byte[] result = new byte[2] { 0x00, 0x00 };
+
+            //// ef=1
+            //SpiSendCmd(EF_Config);
+            //// e2=1
+            //SpiSendCmd(ER_Power);
+
+            //// Watch nFFIT to trigger
+
+            //result = SpiReadStatus();
+
+            // Turn TX On
+            byte[] cmd1 = { 0x82, 0xDD };
+            SpiSendCmd(cmd1);
+
+            //// Read FIFO byte
+            //spiDevice.TransferFullDuplex(cmd, result);
+
+            //// et = 0
+            //SpiSendCmd(Power);
+            //// el = 0 
+            //SpiSendCmd(Config);
         }
     }
 }

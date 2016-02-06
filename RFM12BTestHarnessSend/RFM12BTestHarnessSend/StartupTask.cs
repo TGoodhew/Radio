@@ -33,7 +33,6 @@ namespace RFM12BTestHarnessSend
             while (true)
             {
                 rfm12b.SendData(data);
-                await Task.Delay(250);
             }
 
             deferral.Complete();

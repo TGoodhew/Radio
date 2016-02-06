@@ -21,8 +21,6 @@ namespace RFM12BTestHarnessReceive
             // from closing prematurely by using BackgroundTaskDeferral as
             // described in http://aka.ms/backgroundtaskdeferral
             //
-            byte[] data = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A };
-
             var deferral = taskInstance.GetDeferral();
 
             RFM12B.Rfm12b rfm12b = new RFM12B.Rfm12b("SPI0", 0);
@@ -31,8 +29,7 @@ namespace RFM12BTestHarnessReceive
 
             while (true)
             {
-                rfm12b.SendData(data);
-                await Task.Delay(250);
+                rfm12b.ReadData();
             }
 
             deferral.Complete();
