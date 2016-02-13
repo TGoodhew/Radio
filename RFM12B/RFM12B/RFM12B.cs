@@ -20,19 +20,19 @@ namespace RFM12B
         private GpioController gpioController;
 
         // GPIO Pins used to control the RFM12B Module
-        private GpioPin pinReset = null;
+        //private GpioPin pinReset = null;
         private GpioPin pinNIRQ = null;
-        private GpioPin pinNFFS = null;
-        private GpioPin pinFFIT = null;
-        private GpioPin pinNINT = null;
+        //private GpioPin pinNFFS = null;
+        //private GpioPin pinFFIT = null;
+        //private GpioPin pinNINT = null;
 
         // GPIO Pin Numbers - These should be changed to reflect how the display is actually connected
         // TODO: Split this out into object creation
-        private readonly int NRES_PIN = 4;
-        private readonly int NIRQ_PIN = 12;
-        private readonly int NFFS_PIN = 6;
-        private readonly int FFIT_PIN = 5;
-        private readonly int NINT_PIN = 27;
+        //private readonly int NRES_PIN = 4;
+        private readonly int NIRQ_PIN = 21;
+        //private readonly int NFFS_PIN = 6;
+        //private readonly int FFIT_PIN = 5;
+        //private readonly int NINT_PIN = 27;
 
         // Various RFM12B commands
         private readonly byte[] Reset = { 0xFE, 0x00 };
@@ -113,9 +113,9 @@ namespace RFM12B
 
             SpiSendCmd(cmd);
 
-            // EL, EF, 12pF
+            // EL, EF, 12pF, 434MHz
             cmd[0] = 0x80;
-            cmd[1] = 0xF7;
+            cmd[1] = 0xD7;
 
             SpiSendCmd(cmd);
 
@@ -144,14 +144,14 @@ namespace RFM12B
             SpiSendCmd(cmd);
 
             //FIFO8, 2 Sync, !ff, DR
-            cmd[0] = 0xB8;
-            cmd[1] = 0x00;
+            cmd[0] = 0xCA;
+            cmd[1] = 0x83;
 
             SpiSendCmd(cmd);
 
             // SYNC 2DD4
             cmd[0] = 0xCE;
-            cmd[1] = 0xD4;
+            cmd[1] = 0x63;
 
             SpiSendCmd(cmd);
 
@@ -254,10 +254,10 @@ namespace RFM12B
             }
 
             // Setup additional GPIO pins
-            pinReset = CreateWritePin(NRES_PIN);
+            //pinReset = CreateWritePin(NRES_PIN);
             pinNIRQ = CreateReadPin(NIRQ_PIN);
             //pinNFFS = CreateWritePin(NFFS_PIN);
-            pinFFIT = CreateWritePin(FFIT_PIN);
+            //pinFFIT = CreateWritePin(FFIT_PIN);
             //pinNINT = CreateWritePin(NINT_PIN);
         }
 
@@ -363,26 +363,15 @@ namespace RFM12B
             byte[] cmd = new byte[2] { 0xB0, 0x00 };
             byte[] result = new byte[2] { 0x00, 0x00 };
 
-            //// ef=1
-            //SpiSendCmd(EF_Config);
-            //// e2=1
-            //SpiSendCmd(ER_Power);
-
-            //// Watch nFFIT to trigger
-
-            //result = SpiReadStatus();
-
             // Turn TX On
             byte[] cmd1 = { 0x82, 0xDD };
             SpiSendCmd(cmd1);
 
-            //// Read FIFO byte
-            //spiDevice.TransferFullDuplex(cmd, result);
+            // Send 0x00 0x00
+            // Read FIFO data
+            // Magic
 
-            //// et = 0
-            //SpiSendCmd(Power);
-            //// el = 0 
-            //SpiSendCmd(Config);
+
         }
     }
 }
